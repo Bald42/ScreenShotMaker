@@ -13,6 +13,8 @@ namespace ScreenShotMaker
     /// </summary>
     public class EditorScreenShotMaker : EditorWindow
     {
+        public static EditorScreenShotMaker Window = null;
+
         private Vector2 scrollPosGlobal = Vector2.zero;
         private Vector2 scrollPosEditor = Vector2.zero;
 
@@ -30,26 +32,43 @@ namespace ScreenShotMaker
         private bool isActiveScenes = true;
         private bool isActiveScreenShot = true;
 
-        private bool isViewTimeScale = false;
+        private bool isViewTimeScale = true;
         private bool isViewTimeScaleEdit = false;
-        private bool isViewScenes = false;
+        private bool isViewScenes = true;
         private bool isViewScenesChange = false;
-        private bool isViewScreenShot = false;
+        private bool isViewScreenShot = true;
         private bool isViewScreenShotParams = false;
         private bool isFixTimeScale = false;
         private bool isScreenShotDisableInterface = false;
 
+        private const string hotKey = "#&g";
+
         #region StartMethods
-        [MenuItem("Tools/ScreenShotMaker")]
+        [MenuItem("Tools/ScreenShotMaker/Open")]
         /// <summary>
         /// Открытие окна
         /// Обязательно должна быть статичной!!!!
         /// </summary>
         private static void Open()
         {
+            /*
             EditorScreenShotMaker window = (EditorScreenShotMaker)EditorWindow.GetWindow(typeof(EditorScreenShotMaker));
             window.titleContent = new GUIContent(ScreenShotMakerInfo.TITLE);
             window.Show();
+            */
+            Window = (EditorScreenShotMaker)EditorWindow.GetWindow(typeof(EditorScreenShotMaker));
+            Window.titleContent = new GUIContent(ScreenShotMakerInfo.TITLE);
+            Window.Show();
+        }
+
+        /// <summary>
+        /// Делаем скриншот по кнопке
+        /// </summary>
+        [MenuItem("Tools/ScreenShotMaker/MakeScreenShot " + hotKey)]
+        private static void OnScreenShot ()
+        {
+            Debug.LogError("OnScreenShot");
+            Window.ActiveScreenShot(true);
         }
 
         private void Awake()
@@ -187,7 +206,7 @@ namespace ScreenShotMaker
         {
             scrollPosEditor = GUILayout.BeginScrollView(scrollPosEditor);
             isActiveEditor = GUILayout.Toggle(isActiveEditor,
-                                                (isActiveEditor == true ? "↑  " : "↓  ") + "Info",
+                                                (isActiveEditor == true ? "↑  " : "↓  ") + "Links",
                                                 EditorStyles.boldLabel);
             if (isActiveEditor)
             {
@@ -422,8 +441,7 @@ namespace ScreenShotMaker
         private void AddScene()
         {
             //TODO Возможно можно написать лучше
-            string pathAssets = Application.dataPath;
-            string newScenePath = EditorUtility.OpenFilePanelWithFilters("Add a new scene", pathAssets, new[] { "unity", "unity" }); 
+            string newScenePath = EditorUtility.OpenFilePanelWithFilters("Add a new scene", Application.dataPath, new[] { "unity", "unity" }); 
 
             if (newScenePath != string.Empty)
             {
@@ -564,13 +582,6 @@ namespace ScreenShotMaker
                         EditorGUILayout.TextField("PathFolder: ",
                             classScreenShot.PathFolderForScreenShot);
                     }
-                    else
-                    {
-                        GUILayout.Label("Если ты не укажешь папку\n" +
-                                        "куда сохранять скрины\n" +
-                                        "они по умолчанию сохраняться\n" +
-                                        "в Screenshots в папке с проектом", EditorStyles.boldLabel);
-                    }
 
                     if (classScreenShot.M_ClassResolutionScreenShots.Count > 0)
                     {
@@ -603,7 +614,7 @@ namespace ScreenShotMaker
         /// <summary>
         /// Запускаем процесс делания скринов
         /// </summary>
-        private void ActiveScreenShot(bool isActive)
+        public void ActiveScreenShot(bool isActive)
         {
             if (isActive)
             {
@@ -896,6 +907,7 @@ namespace ScreenShotMaker
         {
             public string NameScene = "";
             public string PathScene = "";
+            //TODO Скорей всего это лишнее
             public UnityEngine.Object SceneObject = null;
         }
 
