@@ -22,7 +22,7 @@ namespace ScreenShotMaker
         //TODO какая-то дичь с тайм скейлом ( надо разобраться
         //private float minTimeScale = Math.Abs(float.MinValue);
         private float minTimeScale = 0.00001f;
-        private float maxTimeScale = 2f;
+        private float maxTimeScale = 5f;
 
         private bool isActiveEditor = false;
         private bool isEditorSave = false;
@@ -185,14 +185,13 @@ namespace ScreenShotMaker
         /// </summary>
         private void ViewEditor()
         {
-            //GUILayout.FlexibleSpace();
             scrollPosEditor = GUILayout.BeginScrollView(scrollPosEditor);
-            GUILayout.Label("------------------------", EditorStyles.boldLabel);
             isActiveEditor = GUILayout.Toggle(isActiveEditor,
-                                                (isActiveEditor == true ? "↑  " : "↓  ") + "Editor",
+                                                (isActiveEditor == true ? "↑  " : "↓  ") + "Info",
                                                 EditorStyles.boldLabel);
             if (isActiveEditor)
-            {                
+            {
+                ViewLinks();
                 ViewEditorTimeScale();
                 ViewEditorScenes();
                 ViewEditorScreenShot();
@@ -210,6 +209,27 @@ namespace ScreenShotMaker
                 }
             }
             GUILayout.EndScrollView();
+        }
+
+        /// <summary>
+        /// Показываем кнопки с ссылками
+        /// </summary>
+        private void ViewLinks ()
+        {
+            EditorGUILayout.BeginHorizontal();
+            if (GUILayout.Button("All versions"))
+            {
+                Application.OpenURL(ScreenShotMakerInfo.URL_ALL_VERSIONS);
+            }
+            if (GUILayout.Button("Last version"))
+            {
+                Application.OpenURL(ScreenShotMakerInfo.URL_LAST_VERSION);
+            }
+            if (GUILayout.Button("Feedback"))
+            {
+                Application.OpenURL(ScreenShotMakerInfo.URL_FEEDBACK);
+            }
+            EditorGUILayout.EndHorizontal();
         }
 
         /// <summary>
