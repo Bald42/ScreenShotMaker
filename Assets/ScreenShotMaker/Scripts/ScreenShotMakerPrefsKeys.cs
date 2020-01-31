@@ -7,7 +7,7 @@ namespace ScreenShotMaker
     /// <summary>
     /// Хранилище ключей префсов для интсрумента ScreenShotMaker
     /// </summary>
-    public static class PrefsKeys
+    public static class ScreenShotMakerPrefsKeys
     {
         public static string PathScene
         {

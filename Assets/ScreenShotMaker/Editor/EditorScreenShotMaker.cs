@@ -73,8 +73,8 @@ namespace ScreenShotMaker
         /// </summary>
         private void CheckClassScene()
         {
-            if (!EditorPrefs.HasKey(PrefsKeys.NumberScenes) ||
-                EditorPrefs.GetInt(PrefsKeys.NumberScenes) <= 0)
+            if (!EditorPrefs.HasKey(ScreenShotMakerPrefsKeys.NumberScenes) ||
+                EditorPrefs.GetInt(ScreenShotMakerPrefsKeys.NumberScenes) <= 0)
             {
                 for (int i = 0; i < EditorBuildSettings.scenes.Length; i++)
                 {
@@ -88,17 +88,17 @@ namespace ScreenShotMaker
                     tempClassScenes.PathScene = tempPath;
                     tempClassScenes.SceneObject = AssetDatabase.LoadAssetAtPath(tempPath, typeof(object));
                     tempClassScenes.NameScene = tempClassScenes.SceneObject.name;
-                    EditorPrefs.SetString(PrefsKeys.PathScene + i, tempClassScenes.PathScene);
+                    EditorPrefs.SetString(ScreenShotMakerPrefsKeys.PathScene + i, tempClassScenes.PathScene);
                     classScenes.Add(tempClassScenes);
                 }
-                EditorPrefs.SetInt(PrefsKeys.NumberScenes, classScenes.Count);
+                EditorPrefs.SetInt(ScreenShotMakerPrefsKeys.NumberScenes, classScenes.Count);
             }
             else
             {
-                for (int i = 0; i < EditorPrefs.GetInt(PrefsKeys.NumberScenes); i++)
+                for (int i = 0; i < EditorPrefs.GetInt(ScreenShotMakerPrefsKeys.NumberScenes); i++)
                 {
                     ClassScenes tempClassScenes = new ClassScenes();
-                    tempClassScenes.PathScene = EditorPrefs.GetString(PrefsKeys.PathScene + i);
+                    tempClassScenes.PathScene = EditorPrefs.GetString(ScreenShotMakerPrefsKeys.PathScene + i);
                     tempClassScenes.SceneObject = AssetDatabase.LoadAssetAtPath(tempClassScenes.PathScene, typeof(object));
                     tempClassScenes.NameScene = tempClassScenes.SceneObject.name;
                     classScenes.Add(tempClassScenes);
@@ -354,6 +354,7 @@ namespace ScreenShotMaker
                             OnLoadScene(classScenes[i].PathScene, classScenes[i].NameScene);
                         }
 
+                        GUI.color = ScreenShotMakerColor.PaleRed;
                         if (GUILayout.Button("del", GUILayout.MaxWidth(30.0f)))
                         {
                             if (EditorUtility.DisplayDialog("",
@@ -364,14 +365,19 @@ namespace ScreenShotMaker
                                 DeleteScene(i);
                             }
                         }
+                        GUI.color = Color.white;
+
                         EditorGUILayout.EndHorizontal();
                         GUILayout.Space(5f);
                     }
 
+                    GUI.color = ScreenShotMakerColor.PaleGreen;
                     if (GUILayout.Button("Add new scene"))
                     {
+                        GUI.color = Color.green;
                         AddScene();
                     }
+                    GUI.color = Color.white;
                 }
             }
         }
@@ -382,11 +388,11 @@ namespace ScreenShotMaker
         private void DeleteScene (int numberScene)
         {
             classScenes.RemoveAt(numberScene);
-            EditorPrefs.SetInt(PrefsKeys.NumberScenes, classScenes.Count);
-            EditorPrefs.DeleteKey(PrefsKeys.PathScene + classScenes.Count);
+            EditorPrefs.SetInt(ScreenShotMakerPrefsKeys.NumberScenes, classScenes.Count);
+            EditorPrefs.DeleteKey(ScreenShotMakerPrefsKeys.PathScene + classScenes.Count);
             for (int i = numberScene; i < classScenes.Count; i++)
             {
-                EditorPrefs.SetString(PrefsKeys.PathScene + i, classScenes[i].PathScene);
+                EditorPrefs.SetString(ScreenShotMakerPrefsKeys.PathScene + i, classScenes[i].PathScene);
             }
         }
 
@@ -409,8 +415,8 @@ namespace ScreenShotMaker
                 tempClassScenes.SceneObject = AssetDatabase.LoadAssetAtPath(newScenePath, typeof(object));
                 tempClassScenes.NameScene = tempClassScenes.SceneObject.name;         
                 classScenes.Add(tempClassScenes);
-                EditorPrefs.SetString(PrefsKeys.PathScene + (classScenes.Count-1), tempClassScenes.PathScene);
-                EditorPrefs.SetInt(PrefsKeys.NumberScenes, classScenes.Count);
+                EditorPrefs.SetString(ScreenShotMakerPrefsKeys.PathScene + (classScenes.Count-1), tempClassScenes.PathScene);
+                EditorPrefs.SetInt(ScreenShotMakerPrefsKeys.NumberScenes, classScenes.Count);
                 Debug.Log("<color=green>Вы добавили новую сцену</color>");
             }
             else
@@ -478,8 +484,8 @@ namespace ScreenShotMaker
                     {
                         if (classScenes.Count > 0)
                         {
-                            EditorPrefs.SetInt(PrefsKeys.NumberScenes, classScenes.Count - 1);
-                            EditorPrefs.DeleteKey(PrefsKeys.PathScene + (classScenes.Count - 1));
+                            EditorPrefs.SetInt(ScreenShotMakerPrefsKeys.NumberScenes, classScenes.Count - 1);
+                            EditorPrefs.DeleteKey(ScreenShotMakerPrefsKeys.PathScene + (classScenes.Count - 1));
                             classScenes.RemoveAt(classScenes.Count - 1);
                         }
                     }
