@@ -19,7 +19,9 @@ namespace ScreenShotMaker
         private List<ClassScenes> classScenes = new List<ClassScenes>();
         private ClassScreenShot classScreenShot = null;
 
-        private float minTimeScale = Math.Abs(float.MinValue);
+        //TODO какая-то дичь с тайм скейлом ( надо разобраться
+        //private float minTimeScale = Math.Abs(float.MinValue);
+        private float minTimeScale = 0.00001f;
         private float maxTimeScale = 2f;
 
         private bool isActiveEditor = false;
@@ -40,13 +42,13 @@ namespace ScreenShotMaker
         #region StartMethods
         [MenuItem("Tools/ScreenShotMaker")]
         /// <summary>
-        /// Инициализация
+        /// Открытие окна
         /// Обязательно должна быть статичной!!!!
         /// </summary>
         private static void Open()
         {
             EditorScreenShotMaker window = (EditorScreenShotMaker)EditorWindow.GetWindow(typeof(EditorScreenShotMaker));
-            window.title = ScreenShotMakerInfo.TITLE;
+            window.titleContent = new GUIContent(ScreenShotMakerInfo.TITLE);
             window.Show();
         }
 
@@ -83,24 +85,21 @@ namespace ScreenShotMaker
 
                     ClassScenes tempClassScenes = new ClassScenes();
                     string tempPath = EditorBuildSettings.scenes[i].path;
-                    tempClassScenes.PathScene = tempPath;//.Replace(".unity", "");
+                    tempClassScenes.PathScene = tempPath;
                     tempClassScenes.SceneObject = AssetDatabase.LoadAssetAtPath(tempPath, typeof(object));
                     tempClassScenes.NameScene = tempClassScenes.SceneObject.name;
                     EditorPrefs.SetString(PrefsKeys.PathScene + i, tempClassScenes.PathScene);
-                    Debug.LogError("SavePAth " + tempClassScenes.PathScene);
                     classScenes.Add(tempClassScenes);
                 }
                 EditorPrefs.SetInt(PrefsKeys.NumberScenes, classScenes.Count);
-                Debug.LogError("NumberScenes " + (classScenes.Count));
             }
             else
             {
-                for (int i = 0; i <= EditorPrefs.GetInt(PrefsKeys.NumberScenes); i++)
+                for (int i = 0; i < EditorPrefs.GetInt(PrefsKeys.NumberScenes); i++)
                 {
                     ClassScenes tempClassScenes = new ClassScenes();
                     tempClassScenes.PathScene = EditorPrefs.GetString(PrefsKeys.PathScene + i);
-                    Debug.LogError("LoadPath " + tempClassScenes.PathScene);
-                    tempClassScenes.SceneObject = AssetDatabase.LoadAssetAtPath(tempClassScenes.PathScene/* + ".unity"*/, typeof(object));
+                    tempClassScenes.SceneObject = AssetDatabase.LoadAssetAtPath(tempClassScenes.PathScene, typeof(object));
                     tempClassScenes.NameScene = tempClassScenes.SceneObject.name;
                     classScenes.Add(tempClassScenes);
                 }
@@ -147,16 +146,14 @@ namespace ScreenShotMaker
         {
             scrollPosGlobal = GUILayout.BeginScrollView(scrollPosGlobal);
             ViewClearPrefs();
-            ViewGuiScenesButtons();
             ViewGuiScreenShot();
             ViewGuiTimeScale();
+            ViewGuiScenesButtons();
 
             GUILayout.EndScrollView();
             GUILayout.FlexibleSpace();
             GUILayout.Label(ScreenShotMakerInfo.VERSION, EditorStyles.boldLabel);
-            ViewEditor();
-
-            
+            ViewEditor();            
         }
 
         //TODO Убрать нахер
@@ -350,13 +347,75 @@ namespace ScreenShotMaker
                 {
                     for (int i = 0; i < classScenes.Count; i++)
                     {
+                        EditorGUILayout.BeginHorizontal();
+                        
                         if (GUILayout.Button(classScenes[i].NameScene))
                         {
-                            LoadScene(classScenes[i].PathScene, classScenes[i].NameScene);
+                            OnLoadScene(classScenes[i].PathScene, classScenes[i].NameScene);
                         }
+
+                        if (GUILayout.Button("del", GUILayout.MaxWidth(30.0f)))
+                        {
+                            if (EditorUtility.DisplayDialog("",
+                                                            "Delete this scene?",
+                                                            "Ok",
+                                                            "Cancel"))
+                            {
+                                DeleteScene(i);
+                            }
+                        }
+                        EditorGUILayout.EndHorizontal();
                         GUILayout.Space(5f);
                     }
+
+                    if (GUILayout.Button("Add new scene"))
+                    {
+                        AddScene();
+                    }
                 }
+            }
+        }
+
+        /// <summary>
+        /// Удаляем сцену
+        /// </summary>
+        private void DeleteScene (int numberScene)
+        {
+            classScenes.RemoveAt(numberScene);
+            EditorPrefs.SetInt(PrefsKeys.NumberScenes, classScenes.Count);
+            EditorPrefs.DeleteKey(PrefsKeys.PathScene + classScenes.Count);
+            for (int i = numberScene; i < classScenes.Count; i++)
+            {
+                EditorPrefs.SetString(PrefsKeys.PathScene + i, classScenes[i].PathScene);
+            }
+        }
+
+        /// <summary>
+        /// Добавляем новую сцену
+        /// </summary>
+        private void AddScene()
+        {
+            //TODO Возможно можно написать лучше
+            string pathAssets = Application.dataPath;
+            string newScenePath = EditorUtility.OpenFilePanelWithFilters("Add a new scene", pathAssets, new[] { "unity", "unity" }); 
+
+            if (newScenePath != string.Empty)
+            {
+                int indexPath = newScenePath.IndexOf("/Assets/") + 1;
+                newScenePath = newScenePath.Substring(indexPath);
+                ClassScenes tempClassScenes = new ClassScenes();
+
+                tempClassScenes.PathScene = newScenePath;
+                tempClassScenes.SceneObject = AssetDatabase.LoadAssetAtPath(newScenePath, typeof(object));
+                tempClassScenes.NameScene = tempClassScenes.SceneObject.name;         
+                classScenes.Add(tempClassScenes);
+                EditorPrefs.SetString(PrefsKeys.PathScene + (classScenes.Count-1), tempClassScenes.PathScene);
+                EditorPrefs.SetInt(PrefsKeys.NumberScenes, classScenes.Count);
+                Debug.Log("<color=green>Вы добавили новую сцену</color>");
+            }
+            else
+            {
+                Debug.Log("<color=red>Вы не выбрали сцену</color>");
             }
         }
 
@@ -400,7 +459,7 @@ namespace ScreenShotMaker
                     {
                         if (classScenes[i].SceneObject)
                         {
-                            string tempPath = AssetDatabase.GetAssetPath(classScenes[i].SceneObject).Replace(".unity", "");
+                            string tempPath = AssetDatabase.GetAssetPath(classScenes[i].SceneObject);
                             classScenes[i].PathScene = tempPath;
                             EditorPrefs.SetString(Application.productName + "PathScene" + i, tempPath);
                         }
@@ -432,7 +491,7 @@ namespace ScreenShotMaker
         /// <summary>
         /// Загрузка сцены
         /// </summary>
-        private void LoadScene(string path, string name)
+        private void OnLoadScene(string path, string name)
         {
             if (path != "")
             {
@@ -446,21 +505,14 @@ namespace ScreenShotMaker
                 }
                 else
                 {
-                    LoadSceneIsPlayingMode(name);
+                    //TODO добавить проверку на существование сцены в билд сетингс иначе выдаёт ошибку
+                    EditorSceneManager.LoadScene(name);
                 }
             }
             else
             {
                 Debug.Log("<color=red>Не назначена сцена</color>");
             }
-        }
-
-        /// <summary>
-        /// Загрузка сцены в плей моде
-        /// </summary>
-        private void LoadSceneIsPlayingMode(string sceneName)
-        {
-            Application.LoadLevel(sceneName);
         }
         #endregion ScenesMethods
 
@@ -678,6 +730,7 @@ namespace ScreenShotMaker
         {
             if (classScreenShot != null && classScreenShot.IsActiveScreen)
             {
+                //TODO ВЫнести задержку в константу
                 if (EditorApplication.timeSinceStartup >= classScreenShot.LastTime + 0.5f)
                 {
                     classScreenShot.LastTime = EditorApplication.timeSinceStartup;
@@ -746,6 +799,7 @@ namespace ScreenShotMaker
                     classScreenShot.M_ClassResolutionScreenShots[classScreenShot.CurrentScreenNumber].Width,
                     classScreenShot.M_ClassResolutionScreenShots[classScreenShot.CurrentScreenNumber].Height);
                     ClassScreenShot.SetResolution(classScreenShot.M_ClassResolutionScreenShots[classScreenShot.CurrentScreenNumber].NameResolution);
+                    //TODO переделать названия
                     fileName = Directory.GetFiles(path).Length +
                     "_" +
                     classScreenShot.M_ClassResolutionScreenShots[classScreenShot.CurrentScreenNumber].NameResolution +
@@ -760,6 +814,7 @@ namespace ScreenShotMaker
             }
             else
             {
+                //TODO переделать названия
                 fileName = Directory.GetFiles(path).Length +
                 "_" +
                 Application.productName +
